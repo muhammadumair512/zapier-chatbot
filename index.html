@@ -19,42 +19,51 @@
     ></zapier-interfaces-chatbot-embed>
 
     <script>
-      let requestCount = 0;
+      let clickCount = 0;
 
       // Function to handle logging the request count
-      function logRequestCount() {
-        console.log(`Button pressed = ${requestCount}`);
+      function logClickCount() {
+        console.log(`Button clicked = ${clickCount}`);
       }
 
-      // Wait for the chatbot embed to load
-      window.addEventListener("load", () => {
-        const button = document.querySelector(
-          ".mx-[2px].my-1.5.flex.w-[42px].items-center.justify-center.ring-transparent.transition-all.focus-visible:outline-none.disabled\\:cursor-not-allowed.disabled\\:opacity-50.@notMobile\\:m-2.@notMobile\\:h-10.@notMobile\\:w-10.rounded-[4px].bg-zi-white.text-zi-primary.ring-1.ring-offset-2.ring-offset-zi-white.focus-visible\\:ring-zi-primary"
-        );
+      // Function to start counting clicks on the span with the sr-only class
+      function startCountingClicks() {
+        // Select the span with class 'sr-only'
+        const span = document.querySelector("span.sr-only");
 
-        if (button) {
-          console.log("Button found!");
+        if (span) {
+          console.log("Found the 'Send' button span!");
 
-          // Increase count on button click
-          button.addEventListener("click", () => {
-            requestCount++;
-            logRequestCount();
-          });
-
-          // Increase count when Enter key is pressed while the button is focused
-          button.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-              requestCount++;
-              logRequestCount();
-            }
+          // Add event listener for clicks on the span
+          span.addEventListener("click", () => {
+            clickCount++;
+            logClickCount();
           });
         } else {
-          console.error("Button not found. Please check the class name.");
+          console.error("Span with class 'sr-only' not found.");
+        }
+      }
+
+      // Mutation Observer setup to monitor when the button with span.sr-only is added to the DOM
+      const observer = new MutationObserver((mutationsList, observer) => {
+        for (const mutation of mutationsList) {
+          if (mutation.type === "childList") {
+            // Check if the button with span.sr-only is added to the DOM
+            const button = document.querySelector("button .sr-only");
+            if (button) {
+              console.log("Button with 'sr-only' span detected!");
+              startCountingClicks();
+              observer.disconnect(); // Stop observing once the button is found
+            }
+          }
         }
       });
 
+      // Start observing the body for changes (child list additions)
+      observer.observe(document.body, { childList: true, subtree: true });
+
       // Initial count log when the page loads
-      logRequestCount();
+      logClickCount();
     </script>
   </body>
 </html>
