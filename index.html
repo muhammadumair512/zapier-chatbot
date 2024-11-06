@@ -24,12 +24,19 @@
       // Display initial button pressed count
       console.log(`Button pressed = ${requestCount}`);
 
-      // Custom function to monitor button press (you will need to know the element that triggers the request)
-      function trackButtonClick() {
-        // Every time the button is clicked, increment the counter
-        requestCount++;
-        console.log(`Button pressed = ${requestCount}`);
-      }
+      // Override fetch to monitor requests to https://test-c918f0.zapier.app/api/chat
+      const originalFetch = window.fetch;
+      window.fetch = function (...args) {
+        // Check if the URL matches the target Zapier API endpoint
+        if (args[0].includes("https://test-c918f0.zapier.app/api/chat")) {
+          // Increment the count whenever a request is sent
+          requestCount++;
+          console.log(`Button pressed = ${requestCount}`);
+        }
+
+        // Call the original fetch function
+        return originalFetch(...args);
+      };
 
       // Set a timeout to ensure the chatbot element is fully loaded
       setTimeout(() => {
@@ -38,22 +45,12 @@
         );
 
         if (chatbotEmbed) {
-          // Create an event listener for button presses (example based on observation)
-          // Here, you'll need to attach to the button element inside the embed if accessible
-          const button = chatbotEmbed.shadowRoot?.querySelector("button"); // This is an example if button is inside shadow DOM
-
-          if (button) {
-            // Listen to button click event
-            button.addEventListener("click", trackButtonClick);
-          } else {
-            console.error(
-              "Button not found within the embed. Please check the DOM structure."
-            );
-          }
+          // Optionally log when the embed is loaded
+          console.log("Chatbot embed loaded.");
         } else {
           console.error("Chatbot embed not found.");
         }
-      }, 1000); // Set a delay to ensure the chatbot is fully loaded
+      }, 1000);
     </script>
   </body>
 </html>
