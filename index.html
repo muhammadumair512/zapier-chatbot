@@ -19,54 +19,45 @@
     ></zapier-interfaces-chatbot-embed>
 
     <script>
-      // Make sure that functions are accessible globally
       let clickCount = 0;
 
-      // Function to log the request count
+      // Function to log the click count
       function logClickCount() {
         console.log(`Button clicked = ${clickCount}`);
       }
 
-      // Function to start counting clicks on the span with the sr-only class
+      // Function to count clicks on the "sr-only" span
       function startCountingClicks() {
-        // Select the span with class 'sr-only'
         const span = document.querySelector("span.sr-only");
 
         if (span) {
           console.log("Found the 'Send' button span!");
 
-          // Add event listener for clicks on the span
+          // Add event listener to increment count on click
           span.addEventListener("click", () => {
             clickCount++;
             logClickCount();
           });
         } else {
-          console.error("Span with class 'sr-only' not found.");
+          console.warn("Span with class 'sr-only' not found.");
         }
       }
 
-      // Attach startCountingClicks function to the global window object
-      window.startCountingClicks = startCountingClicks;
+      // Mutation Observer to detect when the span.sr-only element appears in the DOM
+      const observer = new MutationObserver(() => {
+        const span = document.querySelector("span.sr-only");
 
-      // Mutation Observer setup to monitor when the button with span.sr-only is added to the DOM
-      const observer = new MutationObserver((mutationsList, observer) => {
-        for (const mutation of mutationsList) {
-          if (mutation.type === "childList") {
-            // Check if the button with span.sr-only is added to the DOM
-            const button = document.querySelector("button .sr-only");
-            if (button) {
-              console.log("Button with 'sr-only' span detected!");
-              startCountingClicks();
-              observer.disconnect(); // Stop observing once the button is found
-            }
-          }
+        if (span) {
+          // If the element is found, start counting and disconnect the observer
+          startCountingClicks();
+          observer.disconnect(); // Stop observing once span is found and handler is attached
         }
       });
 
-      // Start observing the body for changes (child list additions)
+      // Observe the document body for changes, particularly for child additions
       observer.observe(document.body, { childList: true, subtree: true });
 
-      // Initial count log when the page loads
+      // Log initial count when the page loads
       logClickCount();
     </script>
   </body>
