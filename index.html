@@ -9,18 +9,6 @@
       type="module"
       src="https://interfaces.zapier.com/assets/web-components/zapier-interfaces/zapier-interfaces.esm.js"
     ></script>
-    <style>
-      /* Style to highlight bottom-right 100px area for easier targeting */
-      #click-zone {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 100px;
-        height: 100px;
-        background-color: rgba(0, 0, 0, 0.1);
-        z-index: 1;
-      }
-    </style>
   </head>
   <body>
     <!-- Chatbot Embed -->
@@ -33,30 +21,26 @@
       style="position: relative"
     ></zapier-interfaces-chatbot-embed>
 
-    <!-- Click zone div overlay for the bottom-right corner -->
-    <div id="click-zone"></div>
-
     <script>
-      // update 3
+      //count 5
       let count = 0; // Initialize count
 
+      // Function to increase count and log it
       function increaseCount() {
         count++;
         console.log(`Button pressed count: ${count}`);
       }
 
-      // Add event listeners to the click-zone div for bottom-right corner clicks
-      const clickZone = document.getElementById("click-zone");
-      clickZone.addEventListener("click", increaseCount);
-
-      // Function to handle "Enter" key press when focused inside the iframe
+      // Key press handler for Enter key
       function handleKeyPress(event) {
+        const chatbotEmbed = document.getElementById("chatbot-iframe");
+
         if (event.key === "Enter" && document.activeElement === chatbotEmbed) {
           increaseCount();
         }
       }
 
-      // Function to monitor the iframe and set up listeners
+      // Function to observe the chatbot embed and add overlay
       function observeChatbotEmbed() {
         const chatbotEmbed = document.getElementById("chatbot-iframe");
 
@@ -65,12 +49,25 @@
           return;
         }
 
+        // Add an overlay div for bottom-right corner detection
+        const overlay = document.createElement("div");
+        overlay.style.position = "absolute";
+        overlay.style.bottom = "0";
+        overlay.style.right = "0";
+        overlay.style.width = "100px";
+        overlay.style.height = "100px";
+        overlay.style.cursor = "pointer";
+        overlay.style.backgroundColor = "rgba(0, 0, 0, 0.1)"; // Optional: visible for testing
+
+        chatbotEmbed.appendChild(overlay);
+
+        // Listen for clicks in the overlay area
+        overlay.addEventListener("click", increaseCount);
+
         // Listen for Enter key presses
         window.addEventListener("keydown", handleKeyPress);
 
-        console.log(
-          "MutationObserver: Chatbot iframe found, listeners active."
-        );
+        console.log("Chatbot iframe detected and overlay added.");
       }
 
       // Set up a MutationObserver to detect when the chatbot embed loads
