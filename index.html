@@ -19,40 +19,29 @@
     ></zapier-interfaces-chatbot-embed>
 
     <script>
-      // Variable to store the button click count
-      let buttonClickCount = 0;
+      // Variable to store the request count
+      let requestCount = 0;
 
-      // Function to increment the button click count
-      function incrementButtonClickCount() {
-        buttonClickCount++;
-        console.log("Button clicked", buttonClickCount, "times");
-      }
+      // Save the original fetch function to call it later
+      const originalFetch = window.fetch;
 
-      // Wait until the button is available in the DOM
-      document.addEventListener("DOMContentLoaded", function () {
-        // Set up a MutationObserver to detect when the button appears
-        const observer = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            mutation.addedNodes.forEach((node) => {
-              // Check if the button is in the added nodes
-              if (
-                node.nodeName === "BUTTON" &&
-                node.classList.contains("mx-[2px]") // check for unique button class
-              ) {
-                node.addEventListener("click", incrementButtonClickCount);
-              }
-            });
-          });
-        });
+      // Override the fetch function to intercept requests
+      window.fetch = async (...args) => {
+        const [resource, config] = args;
 
-        // Observe changes in the Zapier chatbot embed element
-        const chatbotEmbed = document.querySelector(
-          "zapier-interfaces-chatbot-embed"
-        );
-        if (chatbotEmbed) {
-          observer.observe(chatbotEmbed, { childList: true, subtree: true });
+        // Check if the request is a POST request to the target URL
+        if (
+          resource === "https://test-c918f0.zapier.app/api/chat" &&
+          config?.method === "POST"
+        ) {
+          // Increment the counter if the request matches
+          requestCount++;
+          console.log(`Chat button clicked ${requestCount} times`);
         }
-      });
+
+        // Call the original fetch function with the provided arguments
+        return originalFetch(...args);
+      };
     </script>
   </body>
 </html>
