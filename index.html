@@ -11,17 +11,48 @@
     ></script>
   </head>
   <body>
-    <!-- <zapier-interfaces-chatbot-embed
-      data-is-popup="false"
-      data-chatbot-id="cm2yan90j000c7aty144l4g3v"
-      data-height="600px"
-      data-width="400px"
-    ></zapier-interfaces-chatbot-embed> -->
     <zapier-interfaces-chatbot-embed
       is-popup="false"
       chatbot-id="cm2yan90j000c7aty144l4g3v"
       height="600px"
       width="400px"
     ></zapier-interfaces-chatbot-embed>
+
+    <script>
+      // Variable to store the button click count
+      let buttonClickCount = 0;
+
+      // Function to increment the button click count
+      function incrementButtonClickCount() {
+        buttonClickCount++;
+        console.log("Button clicked", buttonClickCount, "times");
+      }
+
+      // Wait until the button is available in the DOM
+      document.addEventListener("DOMContentLoaded", function () {
+        // Set up a MutationObserver to detect when the button appears
+        const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+              // Check if the button is in the added nodes
+              if (
+                node.nodeName === "BUTTON" &&
+                node.classList.contains("mx-[2px]") // check for unique button class
+              ) {
+                node.addEventListener("click", incrementButtonClickCount);
+              }
+            });
+          });
+        });
+
+        // Observe changes in the Zapier chatbot embed element
+        const chatbotEmbed = document.querySelector(
+          "zapier-interfaces-chatbot-embed"
+        );
+        if (chatbotEmbed) {
+          observer.observe(chatbotEmbed, { childList: true, subtree: true });
+        }
+      });
+    </script>
   </body>
 </html>
