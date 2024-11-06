@@ -3,94 +3,103 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zapier Chatbot Embed</title>
-    <script
-      async
-      type="module"
-      src="https://interfaces.zapier.com/assets/web-components/zapier-interfaces/zapier-interfaces.esm.js"
-    ></script>
+    <title>Iframe Button Click Counter</title>
   </head>
   <body>
-    <!-- Chatbot Embed -->
+    <!-- Embed your chatbot iframe -->
     <zapier-interfaces-chatbot-embed
-      id="chatbot-iframe"
+      id="chatbot-embed"
       is-popup="false"
       chatbot-id="cm2yan90j000c7aty144l4g3v"
       height="600px"
       width="400px"
-      style="position: relative"
-    >
-    </zapier-interfaces-chatbot-embed>
+    ></zapier-interfaces-chatbot-embed>
 
     <script>
-      let count = 0; // Initialize count
+      // Variable to count button clicks and Enter presses
+      let clickCount = 0;
+      let enterCount = 0;
 
-      // Function to increase count and log it
-      function increaseCount() {
-        count++;
-        console.log(`Action count: ${count}`);
+      // Function to handle button clicks
+      function handleButtonClick() {
+        clickCount++;
+        console.log(`Button clicked ${clickCount} times.`);
       }
 
-      // Function to detect Enter key presses inside the iframe area
-      function handleKeyPress(event) {
+      // Function to handle Enter key press
+      function handleEnterKeyPress(event) {
         if (event.key === "Enter") {
-          increaseCount();
+          enterCount++;
+          console.log(`Enter key pressed ${enterCount} times.`);
         }
       }
 
-      // MutationObserver to detect the embed iframe loading
-      const observer = new MutationObserver((mutationsList, observer) => {
-        for (const mutation of mutationsList) {
-          if (mutation.type === "childList") {
-            const chatbotEmbed = document.querySelector(
-              "zapier-interfaces-chatbot-embed"
-            );
-            if (chatbotEmbed) {
-              observeIframeContent(chatbotEmbed);
-              observer.disconnect(); // Stop observing once iframe is loaded
-              break;
-            }
-          }
-        }
-      });
+      // Set up MutationObserver to watch for iframe load and its content
+      document.addEventListener("DOMContentLoaded", () => {
+        const chatbotEmbed = document.querySelector(
+          "zapier-interfaces-chatbot-embed"
+        );
 
-      // Main function to attach event listeners once the iframe is available
-      function observeIframeContent(chatbotEmbed) {
-        // Check for iframe presence
-        const iframe = chatbotEmbed.shadowRoot.querySelector("iframe");
-
-        if (!iframe) {
-          console.error("Iframe not found.");
+        if (!chatbotEmbed) {
+          console.error("Chatbot embed not found.");
           return;
         }
 
-        // Add overlay div for bottom-right click area
-        const overlay = document.createElement("div");
-        overlay.style.position = "absolute";
-        overlay.style.bottom = "0";
-        overlay.style.right = "0";
-        overlay.style.width = "100px";
-        overlay.style.height = "100px";
-        overlay.style.cursor = "pointer";
-        overlay.style.backgroundColor = "rgba(0, 0, 0, 0.1)"; // Optional styling for visibility
-        chatbotEmbed.shadowRoot.appendChild(overlay);
+        // Observe the chatbot element for changes (specifically shadow DOM)
+        const observer = new MutationObserver(() => {
+          const shadowRoot = chatbotEmbed.shadowRoot;
 
-        // Listen for clicks in the bottom-right overlay
-        overlay.addEventListener("click", increaseCount);
+          if (shadowRoot) {
+            const iframe = shadowRoot.querySelector("iframe");
 
-        // Listen for keypress in the window to detect Enter with iframe focus
-        window.addEventListener("keydown", (event) => {
-          // Check if the iframe is focused
-          if (document.activeElement === iframe) {
-            handleKeyPress(event);
+            if (iframe) {
+              // Stop observing after we find the iframe
+              observer.disconnect();
+
+              // Access the iframe's document
+              const iframeDoc =
+                iframe.contentDocument || iframe.contentWindow.document;
+
+              // Observe the iframe's content for the button and textarea
+              const iframeObserver = new MutationObserver(() => {
+                // Find the button inside the iframe
+                const button = iframeDoc.querySelector("button");
+
+                if (button) {
+                  console.log("Button found inside the iframe!");
+
+                  // Add click event listener to the button
+                  button.addEventListener("click", handleButtonClick);
+
+                  // Add event listener for Enter key inside the iframe's document
+                  const textarea = iframeDoc.querySelector("textarea");
+                  if (textarea) {
+                    textarea.addEventListener("keydown", handleEnterKeyPress);
+                  }
+
+                  // Stop observing once the button and textarea are found
+                  iframeObserver.disconnect();
+                } else {
+                  console.log("Button not found yet inside the iframe.");
+                }
+              });
+
+              // Start observing the iframe document for changes
+              iframeObserver.observe(iframeDoc, {
+                childList: true,
+                subtree: true,
+              });
+            } else {
+              console.log("Iframe not found in shadow root.");
+            }
+          } else {
+            console.log("Shadow root not found yet. Retrying...");
           }
         });
 
-        console.log("Observers and events are set up for iframe.");
-      }
-
-      // Start observing the document for chatbot embed changes
-      observer.observe(document.body, { childList: true, subtree: true });
+        // Start observing the chatbot embed element for shadow root
+        observer.observe(chatbotEmbed, { childList: true, subtree: true });
+      });
     </script>
   </body>
 </html>
