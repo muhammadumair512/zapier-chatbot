@@ -19,24 +19,48 @@
     ></zapier-interfaces-chatbot-embed>
 
     <script>
+      // Initialize the request count and log it to the console on page load
       let requestCount = 0;
+      console.log(`Button pressed = ${requestCount}`);
 
-      // Save the original XMLHttpRequest open method
-      const originalOpen = XMLHttpRequest.prototype.open;
+      // Create a MutationObserver to watch for changes in the chatbot container
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          // Check if any new nodes are added
+          if (mutation.addedNodes.length) {
+            mutation.addedNodes.forEach((node) => {
+              // Look for network request indicators based on elements or class changes
+              if (node.nodeType === 1) {
+                // Check for element nodes
+                const url = node.querySelector(
+                  '[href="https://test-c918f0.zapier.app/api/chat"]'
+                );
 
-      XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-        // Check if the URL matches the Zapier API endpoint and it's a POST request
-        if (
-          method === "POST" &&
-          url === "https://test-c918f0.zapier.app/api/chat"
-        ) {
-          requestCount++;
-          console.log(`Chat button clicked ${requestCount} times`);
-        }
+                // Increment count if request URL is detected
+                if (url) {
+                  requestCount++;
+                  console.log(`Button pressed = ${requestCount}`);
+                }
+              }
+            });
+          }
+        });
+      });
 
-        // Call the original open method to continue with the request
-        return originalOpen.apply(this, [method, url, ...rest]);
-      };
+      // Target the chatbot embed container to monitor it
+      const targetNode = document.querySelector(
+        "zapier-interfaces-chatbot-embed"
+      );
+
+      // Options for the observer (watching for changes in child elements)
+      const config = { childList: true, subtree: true };
+
+      // Start observing the target node
+      if (targetNode) {
+        observer.observe(targetNode, config);
+      } else {
+        console.warn("Chatbot embed element not found.");
+      }
     </script>
   </body>
 </html>
