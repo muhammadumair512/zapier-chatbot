@@ -19,19 +19,22 @@
     ></zapier-interfaces-chatbot-embed>
 
     <script>
+      //update 1
       let clickCount = 0;
+      let intervalID;
 
-      // Function to log the click count
       function logClickCount() {
         console.log(`Button clicked = ${clickCount}`);
       }
 
-      // Function to count clicks on the "sr-only" span
       function startCountingClicks() {
         const span = document.querySelector("span.sr-only");
 
         if (span) {
           console.log("Found the 'Send' button span!");
+
+          // Stop further retries since we found the element
+          clearInterval(intervalID);
 
           // Add event listener to increment count on click
           span.addEventListener("click", () => {
@@ -39,25 +42,14 @@
             logClickCount();
           });
         } else {
-          console.warn("Span with class 'sr-only' not found.");
+          console.warn("Span with class 'sr-only' not found yet. Retrying...");
         }
       }
 
-      // Mutation Observer to detect when the span.sr-only element appears in the DOM
-      const observer = new MutationObserver(() => {
-        const span = document.querySelector("span.sr-only");
+      // Retry every 500ms to find the 'sr-only' span
+      intervalID = setInterval(startCountingClicks, 500);
 
-        if (span) {
-          // If the element is found, start counting and disconnect the observer
-          startCountingClicks();
-          observer.disconnect(); // Stop observing once span is found and handler is attached
-        }
-      });
-
-      // Observe the document body for changes, particularly for child additions
-      observer.observe(document.body, { childList: true, subtree: true });
-
-      // Log initial count when the page loads
+      // Log initial count on page load
       logClickCount();
     </script>
   </body>
