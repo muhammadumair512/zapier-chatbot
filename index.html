@@ -19,38 +19,69 @@
     ></zapier-interfaces-chatbot-embed>
 
     <script>
-      //update 1
+      // update 2
       let clickCount = 0;
-      let intervalID;
 
       function logClickCount() {
         console.log(`Button clicked = ${clickCount}`);
       }
 
-      function startCountingClicks() {
-        const span = document.querySelector("span.sr-only");
-
-        if (span) {
-          console.log("Found the 'Send' button span!");
-
-          // Stop further retries since we found the element
-          clearInterval(intervalID);
-
-          // Add event listener to increment count on click
-          span.addEventListener("click", () => {
-            clickCount++;
-            logClickCount();
-          });
-        } else {
-          console.warn("Span with class 'sr-only' not found yet. Retrying...");
-        }
+      function handleButtonClick() {
+        clickCount++;
+        logClickCount();
       }
 
-      // Retry every 500ms to find the 'sr-only' span
-      intervalID = setInterval(startCountingClicks, 500);
+      function tryToAddClickListener(root) {
+        // Attempt to find the button inside the specified root (Shadow or regular DOM)
+        const button = root.querySelector(
+          "button.mx-[2px].my-1.5.flex.w-[42px]"
+        );
 
-      // Log initial count on page load
-      logClickCount();
+        if (button) {
+          const span = button.querySelector("span.sr-only");
+          if (span) {
+            span.addEventListener("click", handleButtonClick);
+            console.log(
+              "Click listener attached to 'sr-only' span inside button."
+            );
+            return true; // Listener added successfully
+          }
+        }
+        return false; // Element not found
+      }
+
+      function observeEmbedForButton() {
+        const zapierEmbed = document.querySelector(
+          "zapier-interfaces-chatbot-embed"
+        );
+
+        if (!zapierEmbed) {
+          console.error("Zapier chatbot embed not found.");
+          return;
+        }
+
+        // Observe the Shadow DOM or regular DOM for changes
+        const observer = new MutationObserver(() => {
+          const shadowRoot = zapierEmbed.shadowRoot || zapierEmbed;
+
+          if (tryToAddClickListener(shadowRoot)) {
+            observer.disconnect(); // Stop observing once the listener is attached
+          } else {
+            console.warn(
+              "Button with 'sr-only' span not yet found. Retrying..."
+            );
+          }
+        });
+
+        // Start observing child changes in either Shadow DOM or regular DOM
+        observer.observe(zapierEmbed, { childList: true, subtree: true });
+      }
+
+      // Initialize the observer to look for the button once DOM content is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        observeEmbedForButton();
+        logClickCount(); // Log initial click count on page load
+      });
     </script>
   </body>
 </html>
