@@ -21,36 +21,62 @@
     <script>
       let requestCount = 0;
 
-      // Display initial button pressed count
-      console.log(`Button pressed = ${requestCount}`);
+      // Function to handle logging the request count
+      function logRequestCount() {
+        console.log(`Button pressed = ${requestCount}`);
+      }
 
-      // Override fetch to monitor requests to https://test-c918f0.zapier.app/api/chat
+      // 1. Intercepting Fetch Requests
       const originalFetch = window.fetch;
       window.fetch = function (...args) {
-        // Check if the URL matches the target Zapier API endpoint
-        if (args[0].includes("https://test-c918f0.zapier.app/api/chat")) {
-          // Increment the count whenever a request is sent
+        // Detecting the network request to Zapier API
+        if (args[0].includes('https://test-c918f0.zapier.app/api/chat')) {
           requestCount++;
-          console.log(`Button pressed = ${requestCount}`);
+          logRequestCount();  // Log the updated count
         }
-
         // Call the original fetch function
         return originalFetch(...args);
       };
 
-      // Set a timeout to ensure the chatbot element is fully loaded
+      // 2. Intercepting XMLHttpRequest (older method used by some websites)
+      const originalXHR = window.XMLHttpRequest;
+      window.XMLHttpRequest = function () {
+        const xhr = new originalXHR();
+        
+        // Intercepting the send method to detect when a request is made
+        const originalSend = xhr.send;
+        xhr.send = function (...args) {
+          // Check if the request URL matches
+          if (xhr._url && xhr._url.includes('https://test-c918f0.zapier.app/api/chat')) {
+            requestCount++;
+            logRequestCount();  // Log the updated count
+          }
+          originalSend.apply(xhr, args);
+        };
+
+        // Override the open method to capture the URL
+        const originalOpen = xhr.open;
+        xhr.open = function (method, url, ...rest) {
+          xhr._url = url;  // Store the URL of the request
+          originalOpen.call(xhr, method, url, ...rest);
+        };
+
+        return xhr;
+      };
+
+      // 3. Checking whether the embedded chatbot has loaded and interacting with it
       setTimeout(() => {
-        const chatbotEmbed = document.querySelector(
-          "zapier-interfaces-chatbot-embed"
-        );
+        const chatbotEmbed = document.querySelector("zapier-interfaces-chatbot-embed");
 
         if (chatbotEmbed) {
-          // Optionally log when the embed is loaded
           console.log("Chatbot embed loaded.");
         } else {
           console.error("Chatbot embed not found.");
         }
       }, 1000);
+
+      // Initial count log when the page loads
+      logRequestCount();
     </script>
   </body>
 </html>
