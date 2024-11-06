@@ -22,7 +22,7 @@
       // Make sure that functions are accessible globally
       let clickCount = 0;
 
-      // Function to handle logging the request count
+      // Function to log the request count
       function logClickCount() {
         console.log(`Button clicked = ${clickCount}`);
       }
@@ -44,6 +44,9 @@
           console.error("Span with class 'sr-only' not found.");
         }
       }
+
+      // Attach startCountingClicks function to the global window object
+      window.startCountingClicks = startCountingClicks;
 
       // Mutation Observer setup to monitor when the button with span.sr-only is added to the DOM
       const observer = new MutationObserver((mutationsList, observer) => {
