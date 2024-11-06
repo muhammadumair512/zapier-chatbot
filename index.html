@@ -26,54 +26,32 @@
         console.log(`Button pressed = ${requestCount}`);
       }
 
-      // 1. Intercepting Fetch Requests
-      const originalFetch = window.fetch;
-      window.fetch = function (...args) {
-        // Detecting the network request to Zapier API
-        if (args[0].includes('https://test-c918f0.zapier.app/api/chat')) {
-          requestCount++;
-          logRequestCount();  // Log the updated count
-        }
-        // Call the original fetch function
-        return originalFetch(...args);
-      };
+      // Wait for the chatbot embed to load
+      window.addEventListener("load", () => {
+        const button = document.querySelector(
+          ".mx-[2px].my-1.5.flex.w-[42px].items-center.justify-center.ring-transparent.transition-all.focus-visible:outline-none.disabled\\:cursor-not-allowed.disabled\\:opacity-50.@notMobile\\:m-2.@notMobile\\:h-10.@notMobile\\:w-10.rounded-[4px].bg-zi-white.text-zi-primary.ring-1.ring-offset-2.ring-offset-zi-white.focus-visible\\:ring-zi-primary"
+        );
 
-      // 2. Intercepting XMLHttpRequest (older method used by some websites)
-      const originalXHR = window.XMLHttpRequest;
-      window.XMLHttpRequest = function () {
-        const xhr = new originalXHR();
-        
-        // Intercepting the send method to detect when a request is made
-        const originalSend = xhr.send;
-        xhr.send = function (...args) {
-          // Check if the request URL matches
-          if (xhr._url && xhr._url.includes('https://test-c918f0.zapier.app/api/chat')) {
+        if (button) {
+          console.log("Button found!");
+
+          // Increase count on button click
+          button.addEventListener("click", () => {
             requestCount++;
-            logRequestCount();  // Log the updated count
-          }
-          originalSend.apply(xhr, args);
-        };
+            logRequestCount();
+          });
 
-        // Override the open method to capture the URL
-        const originalOpen = xhr.open;
-        xhr.open = function (method, url, ...rest) {
-          xhr._url = url;  // Store the URL of the request
-          originalOpen.call(xhr, method, url, ...rest);
-        };
-
-        return xhr;
-      };
-
-      // 3. Checking whether the embedded chatbot has loaded and interacting with it
-      setTimeout(() => {
-        const chatbotEmbed = document.querySelector("zapier-interfaces-chatbot-embed");
-
-        if (chatbotEmbed) {
-          console.log("Chatbot embed loaded.");
+          // Increase count when Enter key is pressed while the button is focused
+          button.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+              requestCount++;
+              logRequestCount();
+            }
+          });
         } else {
-          console.error("Chatbot embed not found.");
+          console.error("Button not found. Please check the class name.");
         }
-      }, 1000);
+      });
 
       // Initial count log when the page loads
       logRequestCount();
