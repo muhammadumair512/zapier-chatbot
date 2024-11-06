@@ -22,34 +22,48 @@
     ></zapier-interfaces-chatbot-embed>
 
     <script>
-      //count 5
       let count = 0; // Initialize count
 
       // Function to increase count and log it
       function increaseCount() {
         count++;
-        console.log(`Button pressed count: ${count}`);
+        console.log(`Action count: ${count}`);
       }
 
-      // Key press handler for Enter key
+      // Function to detect Enter key presses inside the iframe area
       function handleKeyPress(event) {
-        const chatbotEmbed = document.getElementById("chatbot-iframe");
-
-        if (event.key === "Enter" && document.activeElement === chatbotEmbed) {
+        if (event.key === "Enter") {
           increaseCount();
         }
       }
 
-      // Function to observe the chatbot embed and add overlay
-      function observeChatbotEmbed() {
-        const chatbotEmbed = document.getElementById("chatbot-iframe");
+      // MutationObserver to detect the embed iframe loading
+      const observer = new MutationObserver((mutationsList, observer) => {
+        for (const mutation of mutationsList) {
+          if (mutation.type === "childList") {
+            const chatbotEmbed = document.querySelector(
+              "zapier-interfaces-chatbot-embed"
+            );
+            if (chatbotEmbed) {
+              observeIframeContent(chatbotEmbed);
+              observer.disconnect(); // Stop observing once iframe is loaded
+              break;
+            }
+          }
+        }
+      });
 
-        if (!chatbotEmbed) {
-          console.log("Chatbot embed not found.");
+      // Main function to attach event listeners once the iframe is available
+      function observeIframeContent(chatbotEmbed) {
+        // Check for iframe presence
+        const iframe = chatbotEmbed.shadowRoot.querySelector("iframe");
+
+        if (!iframe) {
+          console.error("Iframe not found.");
           return;
         }
 
-        // Add an overlay div for bottom-right corner detection
+        // Add overlay div for bottom-right click area
         const overlay = document.createElement("div");
         overlay.style.position = "absolute";
         overlay.style.bottom = "0";
@@ -57,34 +71,24 @@
         overlay.style.width = "100px";
         overlay.style.height = "100px";
         overlay.style.cursor = "pointer";
-        overlay.style.backgroundColor = "rgba(0, 0, 0, 0.1)"; // Optional: visible for testing
+        overlay.style.backgroundColor = "rgba(0, 0, 0, 0.1)"; // Optional styling for visibility
+        chatbotEmbed.shadowRoot.appendChild(overlay);
 
-        chatbotEmbed.appendChild(overlay);
-
-        // Listen for clicks in the overlay area
+        // Listen for clicks in the bottom-right overlay
         overlay.addEventListener("click", increaseCount);
 
-        // Listen for Enter key presses
-        window.addEventListener("keydown", handleKeyPress);
+        // Listen for keypress in the window to detect Enter with iframe focus
+        window.addEventListener("keydown", (event) => {
+          // Check if the iframe is focused
+          if (document.activeElement === iframe) {
+            handleKeyPress(event);
+          }
+        });
 
-        console.log("Chatbot iframe detected and overlay added.");
+        console.log("Observers and events are set up for iframe.");
       }
 
-      // Set up a MutationObserver to detect when the chatbot embed loads
-      const observer = new MutationObserver((mutationsList, observer) => {
-        for (const mutation of mutationsList) {
-          if (mutation.type === "childList") {
-            const chatbotEmbed = document.getElementById("chatbot-iframe");
-            if (chatbotEmbed) {
-              observeChatbotEmbed();
-              observer.disconnect(); // Stop observing once we find the iframe
-              break;
-            }
-          }
-        }
-      });
-
-      // Start observing the document for changes
+      // Start observing the document for chatbot embed changes
       observer.observe(document.body, { childList: true, subtree: true });
     </script>
   </body>
