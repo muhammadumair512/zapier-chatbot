@@ -19,28 +19,23 @@
     ></zapier-interfaces-chatbot-embed>
 
     <script>
-      // Variable to store the request count
       let requestCount = 0;
 
-      // Save the original fetch function to call it later
-      const originalFetch = window.fetch;
+      // Save the original XMLHttpRequest open method
+      const originalOpen = XMLHttpRequest.prototype.open;
 
-      // Override the fetch function to intercept requests
-      window.fetch = async (...args) => {
-        const [resource, config] = args;
-
-        // Check if the request is a POST request to the target URL
+      XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+        // Check if the URL matches the Zapier API endpoint and it's a POST request
         if (
-          resource === "https://test-c918f0.zapier.app/api/chat" &&
-          config?.method === "POST"
+          method === "POST" &&
+          url === "https://test-c918f0.zapier.app/api/chat"
         ) {
-          // Increment the counter if the request matches
           requestCount++;
           console.log(`Chat button clicked ${requestCount} times`);
         }
 
-        // Call the original fetch function with the provided arguments
-        return originalFetch(...args);
+        // Call the original open method to continue with the request
+        return originalOpen.apply(this, [method, url, ...rest]);
       };
     </script>
   </body>
